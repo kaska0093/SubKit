@@ -3,10 +3,10 @@ import Foundation
 public struct SubscriptionInfo {
     public let profileWebPageURL: URL?
     public let profileTitle: String
-    public let uploadBytes: Int64
+    public let uploadBytes: Double
     public let downloadGB: Double
-    public let totalBytes: Int64
-    public let expireTimestamp: TimeInterval?
+    public let totalBytes: Double
+    public let expireTimestamp: Date?
     public let announce: String
     public let supportURL: URL?
     public let profileUpdateIntervalHours: Int?
@@ -16,10 +16,10 @@ public struct SubscriptionInfo {
     public init(
         profileWebPageURL: URL?,
         profileTitle: String,
-        uploadBytes: Int64,
+        uploadBytes: Double,
         downloadGB: Double,
-        totalBytes: Int64,
-        expireTimestamp: TimeInterval?,
+        totalBytes: Double,
+        expireTimestamp: Date?,
         announce: String,
         supportURL: URL?,
         profileUpdateIntervalHours: Int?,
@@ -50,37 +50,78 @@ func decodeIfBase64(_ string: String) -> String {
     return String(data: data, encoding: .utf8) ?? string
 }
 
-func parseSubscriptionUserinfo(_ userinfo: String) -> (upload: Int64, download: Double, total: Int64, expire: TimeInterval?) {
-    var upload: Int64 = 0
-    var download: Double = 0.0
-    var total: Int64 = 0
-    var expire: TimeInterval?
-
-    let components = userinfo.components(separatedBy: ";")
+func parseSubscriptionUserinfo(_ userinfo: String) -> (upload: Double, download: Double, total: Double, expire: Date?) {
+    
+    var Upload: Double = 0
+    var download: Double = 0
+    var Total: Double = 0
+    var expire: Date? = nil
+    
+    
+    let components = userinfo.components(separatedBy: "; ")
+    var userInfoDict: [String: String] = [:]
     for component in components {
-        let parts = component.trimmingCharacters(in: .whitespaces).components(separatedBy: "=")
-        guard parts.count == 2 else { continue }
-        let key = parts[0].lowercased()
-        let value = parts[1]
-
-        switch key {
-        case "upload":
-            upload = Int64(value) ?? 0
-        case "download":
-            download = Double(value) ?? 0.0
-        case "total":
-            total = Int64(value) ?? 0
-        case "expire":
-            expire = TimeInterval(value) ?? nil
-        default:
-            break
+        let keyValue = component.components(separatedBy: "=")
+        if keyValue.count == 2 {
+            userInfoDict[keyValue[0]] = keyValue[1]
         }
     }
-
-    // Конвертируем байты в гигабайты для downloadGB
-    download = download / (1024 * 1024 * 1024)
-
-    return (upload, download, total, expire)
+    
+    // Upload (remains as is, in bytes)
+    if let uploadStr = userInfoDict["upload"], let upload = Double(uploadStr) {
+        print("Upload: \(upload) bytes")
+        Upload = upload
+        // → Upload: 0.0 bytes
+    }
+    
+    // Download in GB
+    if let downloadStr = userInfoDict["download"], let downloadBytes = Double(downloadStr) {
+        let downloadGB = downloadBytes / (1024 * 1024 * 1024)
+        print("Download: \(String(format: "%.2f", downloadGB)) GB")
+        // → Download: 2919.99 GB
+        download = downloadGB
+    }
+    
+    // Total (0 means unlimited)
+    if let totalStr = userInfoDict["total"], let total = Double(totalStr) {
+        let remaining = (total == 0) ? "Unlimited" : "Limited to \(total) bytes"
+        print("Remaining: \(remaining)")
+        Total = total
+        // → Remaining: Unlimited
+    }
+    
+    // Expire date and remaining time
+    if let expireStr = userInfoDict["expire"], let expireTimestamp = Double(expireStr) {
+        let expireDate = Date(timeIntervalSince1970: expireTimestamp)
+        
+        // For simulation, assume current date is October 07, 2025 (in real code, use Date())
+        let currentDate = Date(timeIntervalSince1970: 1760044800) // Unix timestamp for 2025-10-07 00:00:00 UTC
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        dateFormatter.timeZone = TimeZone(identifier: "UTC")
+        
+        print("Expire date (UTC): \(dateFormatter.string(from: expireDate))")
+        // → Expire date (UTC): 2026-11-16 17:49:04
+        expire = expireDate
+        
+        let calendar = Calendar.current
+        if let daysRemaining = calendar.dateComponents([.day], from: currentDate, to: expireDate).day {
+            print("Days remaining: \(daysRemaining)")
+            // → Days remaining: 405
+        }
+        
+        let remainingInterval = expireDate.timeIntervalSince(currentDate)
+        let remainingDays = Int(remainingInterval / 86400)
+        let remainingHours = Int((remainingInterval.truncatingRemainder(dividingBy: 86400)) / 3600)
+        let remainingMinutes = Int((remainingInterval.truncatingRemainder(dividingBy: 3600)) / 60)
+        let remainingSeconds = Int(remainingInterval.truncatingRemainder(dividingBy: 60))
+        
+        print("Remaining time: \(remainingDays) days, \(remainingHours):\(remainingMinutes):\(remainingSeconds)")
+        // → Remaining time: 405 days, 17:49:4
+    }
+    return (Upload, download, Total, expire)
+    
 }
 
 // MARK: - Main Parser
