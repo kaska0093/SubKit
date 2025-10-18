@@ -1,6 +1,6 @@
 import Foundation
 
-public struct SubscriptionInfo {
+public struct SubscriptionInfo: Equatable, Codable  {
     public let profileWebPageURL: URL?
     public let profileTitle: String?
     public let uploadBytes: Double?
