@@ -2,16 +2,16 @@ import Foundation
 
 public struct SubscriptionInfo {
     public let profileWebPageURL: URL?
-    public let profileTitle: String
-    public let uploadBytes: Double
-    public let downloadGB: Double
-    public let totalBytes: Double
+    public let profileTitle: String?
+    public let uploadBytes: Double?
+    public let downloadGB: Double?
+    public let totalBytes: Double?
     public let expireTimestamp: Date?
-    public let announce: String
+    public let announce: String?
     public let supportURL: URL?
     public let profileUpdateIntervalHours: Int?
-    public let providerID: String
-    public let pingType: String
+    public let providerID: String?
+    public let pingType: String?
 
     public init(
         profileWebPageURL: URL?,
