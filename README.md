@@ -19,6 +19,7 @@
 dependencies: [
  .package(url: "https://github.com/kaska0093/SubKit.git", from: "1.0.0")
 ]
+```
 🧪 Пример
 import SubKit
 
