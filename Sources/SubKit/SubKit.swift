@@ -155,7 +155,7 @@ func decodeIfBase64(_ string: String) -> String {
     }
     guard !str.isEmpty,
           let data = Data(base64Encoded: str) else {
-        return string // Возвращаем оригинал, если fail
+        return string
     }
     return String(data: data, encoding: .utf8) ?? string
 }
