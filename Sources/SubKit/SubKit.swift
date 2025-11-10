@@ -147,3 +147,15 @@ public func parseHeaders(from response: HTTPURLResponse) -> SubscriptionInfo {
         pingType: pingType
     )
 }
+
+func decodeIfBase64(_ string: String) -> String {
+    var str = string
+    if str.hasPrefix("base64:") {
+        str = String(str.dropFirst(7)) // Удаляем "base64:"
+    }
+    guard !str.isEmpty,
+          let data = Data(base64Encoded: str) else {
+        return string // Возвращаем оригинал, если fail
+    }
+    return String(data: data, encoding: .utf8) ?? string
+}
