@@ -42,14 +42,6 @@ public struct SubscriptionInfo: Equatable, Codable  {
 
 // MARK: - Helpers
 
-func decodeIfBase64(_ string: String) -> String {
-    guard !string.isEmpty,
-          let data = Data(base64Encoded: string) else {
-        return string
-    }
-    return String(data: data, encoding: .utf8) ?? string
-}
-
 func parseSubscriptionUserinfo(_ userinfo: String) -> (upload: Double, download: Double, total: Double, expire: Date?) {
     
     var Upload: Double = 0
